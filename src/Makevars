@@ -1,0 +1,2 @@
+PKG_LIBS =   -Wl,--no-undefined
+PKG_CPPFLAGS = -I. 

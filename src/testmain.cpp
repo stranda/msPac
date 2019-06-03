@@ -1,13 +1,18 @@
 
 #include <Rcpp.h>
+
+extern "C" {
 #include "ms.h"
+}
+
 using namespace Rcpp;
 
 // [[Rcpp::export]]
 NumericVector testmain(NumericVector u) {
 
   int rv;
-  rv = poisso(u[0]);
+  double mu = u[0];
+  rv = poisso(mu);
 
-  return rv ;
+  return NumericVector::create(rv) ;
 }
