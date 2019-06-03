@@ -1,5 +1,3 @@
-
-
 struct devent {
 	double time;
 	int popi;
@@ -51,7 +49,7 @@ void ordran(int n, double pbuf[]);
 void ranvec(int n, double pbuf[]);
 void order(int n, double pbuf[]);
 
-void biggerlist(int nsam,  char **list );
+void biggerlist(int nsam,  char **list, int maxsites);
 int poisso(double u);
 void locate(int n,double beg, double len,double *ptr);
 void mnmial(int n, int nclass, double p[], int rv[]);
@@ -62,8 +60,11 @@ int xover(int nsam,int ic, int is);
 int links(int c);
 
 
+
 /*AES prototypes and defines moved from source code*/
 /*ms.c */
+#define SITESINC 10
 
-#define SITESINC 10 
-
+int gensam( char **list, double *probss, double *ptmrca, double *pttot, int maxsites) ;
+void seedit( const char * ) ;
+void getpars( int argc, char *argv[], int *howmany)  ;

@@ -116,11 +116,9 @@
 
 #define SEGINC 80 
 /*
-#define SITESINC 10 
+#define SITESINC 10 */
 
-unsigned maxsites = SITESINC ;
 
-*/
 struct segl {
 	int beg;
 	struct node *ptree;
@@ -133,12 +131,12 @@ double alleleage ;
 double segfac ;
 int count, ntbs, nseeds ;
 
-struct params pars ;	
-unsigned maxsites = SITESINC ;
+struct params pars ;
+//unsigned maxsites = SITESINC ;
 
 
 	int 
-gensam( char **list, double *pprobss, double *ptmrca, double *pttot ) 
+gensam( char **list, double *pprobss, double *ptmrca, double *pttot, int maxsites )
 {
 	int nsegs, h, i, k, j, seg, ns, start, end, len, segsit ;
 	struct segl *seglst, *segtre_mig(struct c_params *p, int *nsegs ) ; /* used to be: [MAXSEG];  */
@@ -152,6 +150,8 @@ gensam( char **list, double *pprobss, double *ptmrca, double *pttot )
 	void make_gametes(int nsam, int mfreq,  struct node *ptree, double tt, int newsites, int ns, char **list );
  	void ndes_setup( struct node *, int nsam );
     struct node *ptree1, *ptree0 ;
+    
+    maxsites = SITESINC ;
 
 
 	nsites = pars.cp.nsites ;
@@ -211,7 +211,7 @@ gensam( char **list, double *pprobss, double *ptmrca, double *pttot )
 			maxsites = segsit + ns + SITESINC ;
             posit = (double *)realloc(posit, maxsites*sizeof(double) ) ;
             agevec = (double *)realloc(agevec, maxsites*sizeof(double) ) ;
-			  biggerlist(nsam, list) ;
+			  biggerlist(nsam, list, maxsites) ;
 		}
 		make_gametes(nsam,mfreq,seglst[seg].ptree,tt, segsit, ns, list );
 		free(seglst[seg].ptree) ;
@@ -279,7 +279,7 @@ ndes_setup(struct node *ptree, int nsam )
 }
 
 	void
-biggerlist(int nsam,  char **list )
+biggerlist(int nsam,  char **list, int maxsites)
 {
 	int i;
 
