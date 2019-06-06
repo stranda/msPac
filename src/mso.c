@@ -96,6 +96,7 @@
      requirements.  4 Mar 2014.
 ***************************************************************************/
 
+#include <Rcpp.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -150,8 +151,6 @@ gensam( char **list, double *pprobss, double *ptmrca, double *pttot, int maxsite
 	void make_gametes(int nsam, int mfreq,  struct node *ptree, double tt, int newsites, int ns, char **list );
  	void ndes_setup( struct node *, int nsam );
     struct node *ptree1, *ptree0 ;
-    
-    maxsites = SITESINC ;
 
 
 	nsites = pars.cp.nsites ;
@@ -324,361 +323,167 @@ locate(int n,double beg, double len,double *ptr)
 
 /* int NSEEDS = 3 ; */
 
-  void
-getpars(int argc, char *argv[], int *phowmany )
-{
-	int arg, i, j, sum , pop , argstart, npop , npop2, pop2 ;
-	double migr, mij, psize, palpha ;
-	void addtoelist( struct devent *pt, struct devent *elist ); 
-	void argcheck( int arg, int argc, char ** ) ;
-	int commandlineseed( char ** ) ;
-	void free_eventlist( struct devent *pt, int npop );
-	struct devent *ptemp , *pt ;
-	FILE *pf ;
-	char ch3 ;
-	
 
-  if( count == 0 ) {
-	if( argc < 4 ){ fprintf(stderr,"Too few command line arguments\n"); usage();}
-/* adna */
-	pars.cp.nsamin = atoi( argv[1] );
-      pars.cp.nsam = pars.cp.nsamin ;
-	if( pars.cp.nsam <= 0 ) { fprintf(stderr,"First argument error. nsam <= 0. \n"); usage();}
-	*phowmany = atoi( argv[2] );
-	if( *phowmany  <= 0 ) { fprintf(stderr,"Second argument error. howmany <= 0. \n"); usage();}
-	pars.commandlineseedflag = 0 ;
-	  pars.output_precision = 4 ;
-	pars.cp.r = pars.mp.theta =  pars.cp.f = 0.0 ;
-	pars.cp.track_len = 0. ;
-	pars.cp.npop = npop = 1 ;
-	pars.cp.mig_mat = (double **)malloc( (unsigned) sizeof( double *) );
-	pars.cp.mig_mat[0] = (double *)malloc( (unsigned)sizeof(double ));
-	pars.cp.mig_mat[0][0] =  0.0 ;
-	pars.mp.segsitesin = 0 ;
-	pars.mp.treeflag = 0 ;
- 	pars.mp.timeflag = 0 ;
-    pars.mp.ageflag = 0 ;
-       pars.mp.mfreq = 1 ;
-	pars.cp.config = (int *) malloc( (unsigned)(( pars.cp.npop +1 ) *sizeof( int)) );
-/* adna */
+
+void
+getnums(int *phowmany, NumericVector nsam, NumericVector nreps, NumericVector t, int[] variable_list, int[] I, double[] migmat_array, NumericMatrix en, NumericMatrix ej){
+    int arg, i, j, sum , argstart, npop , npop2;
+    double migr, mij, psize, palpha;
+    FILE *pf;
+    
+    void caseI(), caseen(), caseej(), casema();
+    int commandlineseed( char ** ) ;
+    void free_eventlist( struct devent *pt, int npop );
+    struct devent *ptemp , *pt ;
+    char ch3;
+    NumericVector rcpp_row_en, rcpp_row_ej;
+    
+    
+    pars.cp.nsamin = nsam[0]; //*
+    pars.cp.nsam = pars.cp.nsamin;
+    *phowmany = nreps[0]; //*
+    
+    pars.commandlineseedflag =  variable_list[0]; //*
+    pars.output_precision =  variable_list[1];
+    pars.cp.r = pars.mp.theta =  pars.cp.f = variable_list[2];
+    pars.cp.track_len = variable_list[3] ;
+    pars.cp.npop = npop = variable_list[4] ;
+    pars.mp.segsitesin = variable_list[5] ;
+    pars.mp.treeflag = variable_list[6] ;
+    pars.mp.timeflag =  variable_list[7];
+    pars.mp.ageflag =  variable_list[8];
+    pars.mp.mfreq = variable_list[9];
+    pars.cp.nsites = variable_list[10] ; //*
+    
+    pars.cp.deventlist = NULL;
+    
+    pars.cp.mig_mat = (double **)malloc( (unsigned) sizeof( double *) );
+    pars.cp.mig_mat[0] = (double *)malloc( (unsigned)sizeof(double ));
+    
+    pars.cp.config = (int *) malloc( (unsigned)(( pars.cp.npop +1 ) *sizeof( int)) );
     (pars.cp.config)[0] = pars.cp.nsamin ;
-	pars.cp.size= (double *) malloc( (unsigned)( pars.cp.npop *sizeof( double )) );
-	(pars.cp.size)[0] = 1.0  ;
-	pars.cp.alphag = (double *) malloc( (unsigned)(( pars.cp.npop ) *sizeof( double )) );
-	(pars.cp.alphag)[0] = 0.0  ;
-	pars.cp.nsites = 2 ;
-  }
-  else{
-	npop = pars.cp.npop ;
-	free_eventlist( pars.cp.deventlist, npop );
-  }
-  	pars.cp.deventlist = NULL ;
-
-	arg = 3 ;
-
-	while( arg < argc ){
-		if( argv[arg][0] != '-' ) { fprintf(stderr," argument should be -%s ?\n", argv[arg]); usage();}
-		switch ( argv[arg][1] ){
-			case 'f' :
-				if( ntbs > 0 ) { fprintf(stderr," can't use tbs args and -f option.\n"); exit(1); }
-				arg++;
-				argcheck( arg, argc, argv);
-				pf = fopen( argv[arg], "r" ) ;
-				if( pf == NULL ) {fprintf(stderr," no parameter file %s\n", argv[arg] ); exit(0);}
-				arg++;
-				argc++ ;
-				argv = (char **)malloc(  (unsigned)(argc+1)*sizeof( char *) ) ;
-				argv[arg] = (char *)malloc( (unsigned)(20*sizeof( char )) ) ;
-				argstart = arg ;
-				while( fscanf(pf," %s", argv[arg]) != EOF ) {
-					arg++;
-					argc++;
-					argv = (char **)realloc( argv, (unsigned)argc*sizeof( char*) ) ;
-				        argv[arg] = (char *)malloc( (unsigned)(20*sizeof( char )) ) ;
-					}
-				fclose(pf);
-				argc--;
-				arg = argstart ;
-				break;
-			case 'r' : 
-				arg++;
-				argcheck( arg, argc, argv);
-				pars.cp.r = atof(  argv[arg++] );
-				argcheck( arg, argc, argv);
-				pars.cp.nsites = atoi( argv[arg++]);
-				if( pars.cp.nsites <2 ){
-					fprintf(stderr,"with -r option must specify both rec_rate and nsites>1\n");
-					usage();
-					}
-				break;	
-			case 'p' :
-				arg++;
-				argcheck(arg,argc,argv);
-				pars.output_precision = atoi( argv[arg++] ) ;
-				break;
-			case 'c' : 
-				arg++;
-				argcheck( arg, argc, argv);
-				pars.cp.f = atof(  argv[arg++] );
-				argcheck( arg, argc, argv);
-				pars.cp.track_len = atof( argv[arg++]);
-				if( pars.cp.track_len <1. ){
-					fprintf(stderr,"with -c option must specify both f and track_len>0\n");
-					usage();
-					}
-				break;		
-			case 't' : 
-				arg++;
-				argcheck( arg, argc, argv);
-				pars.mp.theta = atof(  argv[arg++] );
-				break;
-			case 's' : 
-				arg++;
-				argcheck( arg, argc, argv);
-				if( argv[arg-1][2] == 'e' ){  /* command line seeds */
-					pars.commandlineseedflag = 1 ;
-					if( count == 0 ) nseeds = commandlineseed(argv+arg );
-					arg += nseeds ;
-				}
-				else {
-				    pars.mp.segsitesin = atoi(  argv[arg++] );
-				}
-				break;
-			case 'F' : 
-				arg++;
-				argcheck( arg, argc, argv);
-				pars.mp.mfreq = atoi(  argv[arg++] );
-                                if( (pars.mp.mfreq < 2 ) || (pars.mp.mfreq > pars.cp.nsam/2 ) ){
-                                    fprintf(stderr," mfreq must be >= 2 and <= nsam/2.\n");
-                                    usage();
-                                    }
-				break;
-			case 'T' : 
-				pars.mp.treeflag = 1 ;
-				arg++;
-				break;
-			case 'L' : 
-				pars.mp.timeflag = 1 ;
-				arg++;
-				break;
-            case 'a' :
-                pars.mp.ageflag = 1 ;
-                arg++;
-                break;
-			case 'I' : 
-			    arg++;
-			    if( count == 0 ) {
-				argcheck( arg, argc, argv);
-			       	pars.cp.npop = atoi( argv[arg]);
-			        pars.cp.config = (int *) realloc( pars.cp.config, (unsigned)( pars.cp.npop*sizeof( int)));
-				npop = pars.cp.npop ;
-				}
-			    arg++;
-			    for( i=0; i< pars.cp.npop; i++) {
-				argcheck( arg, argc, argv);
-				pars.cp.config[i] = atoi( argv[arg++]);
-				}
-			    if( count == 0 ){
-				pars.cp.mig_mat = 
-                                        (double **)realloc(pars.cp.mig_mat, (unsigned)(pars.cp.npop*sizeof(double *) )) ;
-				pars.cp.mig_mat[0] = 
-                                         (double *)realloc(pars.cp.mig_mat[0], (unsigned)( pars.cp.npop*sizeof(double)));
-				for(i=1; i<pars.cp.npop; i++) pars.cp.mig_mat[i] = 
-                                         (double *)malloc( (unsigned)( pars.cp.npop*sizeof(double)));
-				pars.cp.size = (double *)realloc( pars.cp.size, (unsigned)( pars.cp.npop*sizeof( double )));
-				pars.cp.alphag = 
-                                          (double *) realloc( pars.cp.alphag, (unsigned)( pars.cp.npop*sizeof( double )));
-			        for( i=1; i< pars.cp.npop ; i++) {
-				   (pars.cp.size)[i] = (pars.cp.size)[0]  ;
-				   (pars.cp.alphag)[i] = (pars.cp.alphag)[0] ;
-				   }
-			        }
-			     if( (arg <argc) && ( argv[arg][0] != '-' ) ) {
-				argcheck( arg, argc, argv);
-				migr = atof(  argv[arg++] );
-				}
-			     else migr = 0.0 ;
-			     for( i=0; i<pars.cp.npop; i++) 
-				    for( j=0; j<pars.cp.npop; j++) pars.cp.mig_mat[i][j] = migr/(pars.cp.npop-1) ;
-			     for( i=0; i< pars.cp.npop; i++) pars.cp.mig_mat[i][i] = migr ;
-			     break;
-			case 'm' :
-			     if( npop < 2 ) { fprintf(stderr,"Must use -I option first.\n"); usage();}
-			     if( argv[arg][2] == 'a' ) {
-				    arg++;
-				    for( pop = 0; pop <npop; pop++)
-				      for( pop2 = 0; pop2 <npop; pop2++){
-					     argcheck( arg, argc, argv);
-					     pars.cp.mig_mat[pop][pop2]= atof( argv[arg++] ) ;
-					  }
-				    for( pop = 0; pop < npop; pop++) {
-					  pars.cp.mig_mat[pop][pop] = 0.0 ;
-					  for( pop2 = 0; pop2 < npop; pop2++){
-					    if( pop2 != pop ) pars.cp.mig_mat[pop][pop] += pars.cp.mig_mat[pop][pop2] ;
-					  }
-				    }	
-				}
-			    else {
-		             arg++;
-			         argcheck( arg, argc, argv);
-		             i = atoi( argv[arg++] ) -1;
-			         argcheck( arg, argc, argv);
-		             j = atoi( argv[arg++] ) -1;
-			         argcheck( arg, argc, argv);
-		             mij = atof( argv[arg++] );
-		             pars.cp.mig_mat[i][i] += mij -  pars.cp.mig_mat[i][j]  ;
-		             pars.cp.mig_mat[i][j] = mij;
-			    }
-				break;
-			case 'n' :
-			     if( npop < 2 ) { fprintf(stderr,"Must use -I option first.\n"); usage();}
-			    arg++;
-			    argcheck( arg, argc, argv);
-			    pop = atoi( argv[arg++] ) -1;
-			    argcheck( arg, argc, argv);
-			    psize = atof( argv[arg++] );
-			    pars.cp.size[pop] = psize ;
-			   break;
-			case 'g' :
-			     if( npop < 2 ) { fprintf(stderr,"Must use -I option first.\n"); usage();}
-			    arg++;
-			    argcheck( arg, argc, argv);
-			    pop = atoi( argv[arg++] ) -1;
-			    if( arg >= argc ) { fprintf(stderr,"Not enough arg's after -G.\n"); usage(); }
-			    palpha = atof( argv[arg++] );
-			    pars.cp.alphag[pop] = palpha ;
-			   break;
-			case 'G' :
-			    arg++;
-			    if( arg >= argc ) { fprintf(stderr,"Not enough arg's after -G.\n"); usage(); }
-			    palpha = atof( argv[arg++] );
-			    for( i=0; i<pars.cp.npop; i++) 
-			       pars.cp.alphag[i] = palpha ;
-			   break;
-			case 'e' :
-			    pt = (struct devent *)malloc( sizeof( struct devent) ) ;
-			    pt->detype = argv[arg][2] ;
-			    ch3 = argv[arg][3] ;
-			    arg++;
-			    argcheck( arg, argc, argv);
-			    pt->time = atof( argv[arg++] ) ;
-			    pt->nextde = NULL ;
-			    if( pars.cp.deventlist == NULL ) 
-				    pars.cp.deventlist = pt ;
-			    else if ( pt->time < pars.cp.deventlist->time ) { 
-				    ptemp = pars.cp.deventlist ;
-				    pars.cp.deventlist = pt ;
-				    pt->nextde = ptemp ;	
-				}	
-			    else
-				   addtoelist( pt, pars.cp.deventlist ) ;
-			    switch( pt->detype ) {
-				case 'N' :
-			          argcheck( arg, argc, argv);
-				      pt->paramv = atof( argv[arg++] ) ;
-				      break;
-				case 'G' :
-				  if( arg >= argc ) { fprintf(stderr,"Not enough arg's after -eG.\n"); usage(); }
-				  pt->paramv = atof( argv[arg++] ) ;
-				  break;
-				case 'M' :
-				    argcheck( arg, argc, argv);
-				    pt->paramv = atof( argv[arg++] ) ;
-				    break;
-				case 'n' :
-			          argcheck( arg, argc, argv);
-				  pt->popi = atoi( argv[arg++] ) -1 ;
-			          argcheck( arg, argc, argv);
-				  pt->paramv = atof( argv[arg++] ) ;
-				  break;
-				case 'g' :
-			          argcheck( arg, argc, argv);
-				  pt->popi = atoi( argv[arg++] ) -1 ;
-				  if( arg >= argc ) { fprintf(stderr,"Not enough arg's after -eg.\n"); usage(); }
-				  pt->paramv = atof( argv[arg++] ) ;
-				  break;
-				case 's' :
-			          argcheck( arg, argc, argv);
-				  pt->popi = atoi( argv[arg++] ) -1 ;
-			          argcheck( arg, argc, argv);
-				  pt->paramv = atof( argv[arg++] ) ;
-				  break;
-				case 'm' :
-				  if( ch3 == 'a' ) {
-				     pt->detype = 'a' ;
-				     argcheck( arg, argc, argv);
-				     npop2 = atoi( argv[arg++] ) ;
-				     pt->mat = (double **)malloc( (unsigned)npop2*sizeof( double *) ) ;
-				     for( pop =0; pop <npop2; pop++){
-					   (pt->mat)[pop] = (double *)malloc( (unsigned)npop2*sizeof( double) );
-					   for( i=0; i<npop2; i++){
-					     if( i == pop ) arg++;
-					     else {
-				               argcheck( arg, argc, argv); 
-					       (pt->mat)[pop][i] = atof( argv[arg++] ) ;
-					     }
-					   }
-				     }
-				     for( pop = 0; pop < npop2; pop++) {
-					    (pt->mat)[pop][pop] = 0.0 ;
-					    for( pop2 = 0; pop2 < npop2; pop2++){
-					       if( pop2 != pop ) (pt->mat)[pop][pop] += (pt->mat)[pop][pop2] ;
-					    }
-				     }	
-				  }
-				  else {
-			            argcheck( arg, argc, argv);
-				        pt->popi = atoi( argv[arg++] ) -1 ;
-			            argcheck( arg, argc, argv);
-				        pt->popj = atoi( argv[arg++] ) -1 ;
-			            argcheck( arg, argc, argv);
-				        pt->paramv = atof( argv[arg++] ) ;
-				  }
-				  break;
-				case 'j' :
-			          argcheck( arg, argc, argv);
-				  pt->popi = atoi( argv[arg++] ) -1 ;
-			          argcheck( arg, argc, argv);
-				  pt->popj = atoi( argv[arg++] ) -1 ;
-				  break;
-        /* adna */
-                case 'A' :
-                        argcheck( arg, argc, argv);
-                        pt->popi = atoi( argv[arg++] ) -1 ;
-                        argcheck( arg, argc, argv);
-                        pt->num = atoi( argv[arg++] ) ;
-                        pars.cp.nsam += pt->num ;
-                        break;
-				default: fprintf(stderr,"e event\n");  usage();
-			    }
-			 break;
-			default: fprintf(stderr," option default\n");  usage() ;
-			}
-		}
-		if( (pars.mp.theta == 0.0) && ( pars.mp.segsitesin == 0 ) && ( pars.mp.treeflag == 0 ) && (pars.mp.timeflag == 0) ) {
-			fprintf(stderr," either -s or -t or -T option must be used. \n");
-			usage();
-			exit(1);
-			}
-		sum = 0 ;
-		for( i=0; i< pars.cp.npop; i++) sum += (pars.cp.config)[i] ;
-		if( sum != pars.cp.nsamin ) {   /* adna */
-			fprintf(stderr," sum sample sizes != nsam\n");
-			usage();
-			exit(1);
-			}
+    pars.cp.size= (double *) malloc( (unsigned)( pars.cp.npop *sizeof( double )) );
+    (pars.cp.size)[0] = 1.0  ;
+    pars.cp.alphag = (double *) malloc( (unsigned)(( pars.cp.npop ) *sizeof( double )) );
+    (pars.cp.alphag)[0] = 0.0  ;
+    /*End of intitialization*/
+    
+    /* Case t */
+    pars.mp.theta = t[0];
+    
+    /* Case T - Default = 0 */
+    pars.mp.treeflag = 1 ;
+    
+    /* Case I */
+    migr = 0.0;
+    caseI(I, migr);
+    
+    /* Case ma - did not code other m cases without the a */
+    casema(migmat_array);
+    
+    double row[3];
+    for(i = 0; i <= en.nrow(); i++){
+        Rcpp::NumericVector rcpp_row_en = en(i,_);
+        for(r = 0; r < 3; r++){ //hard coded as three because the en and ej should only have 3 numbers
+            row[r] = rcpp_row_en[r];
+        }
+        caseen(row);
+    }
+    
+    for(i = 0; i <= ej.nrow(); i++){
+        Rcpp::NumericVector rcpp_row_ej = ej(i,_);
+        for(r = 0; r < 3; r++){
+            row[r] = rcpp_row_ej[r];
+        }
+        caseej(row);
+    }
 }
 
-
-	void
-argcheck( int arg, int argc, char *argv[] )
-{
-	if( (arg >= argc ) || ( argv[arg][0] == '-') ) {
-	   fprintf(stderr,"not enough arguments after %s\n", argv[arg-1] ) ;
-	   fprintf(stderr,"For usage type: ms<return>\n");
-	   exit(0);
-	  }
+void
+caseen(double *en){
+    void addtoelist( struct devent *pt, struct devent *elist );
+    struct devent *ptemp , *pt ;
+    
+    pt = (struct devent *)malloc( sizeof( struct devent) ) ;
+    pt->detype = 'n';
+    
+    pt->time = en[0];
+    pt->nextde = NULL ;
+    if( pars.cp.deventlist == NULL )
+        pars.cp.deventlist = pt ;
+    else if ( pt->time < pars.cp.deventlist->time ) {
+        ptemp = pars.cp.deventlist ;
+        pars.cp.deventlist = pt ;
+        pt->nextde = ptemp ;
+    }
+    else
+        addtoelist( pt, pars.cp.deventlist ) ;
+    pt->popi =  en[1] -1 ; /* keep this as - 1? */
+    pt->paramv = en[2] ;
 }
+
+void
+caseej(double *ej){
+    void addtoelist( struct devent *pt, struct devent *elist );
+    struct devent *ptemp , *pt ;
+    
+    pt = (struct devent *)malloc( sizeof( struct devent) ) ;
+    pt->detype = 'j';
+    
+    pt->time = ej[0];
+    pt->nextde = NULL ;
+    if( pars.cp.deventlist == NULL )
+        pars.cp.deventlist = pt ;
+    else if ( pt->time < pars.cp.deventlist->time ) {
+        ptemp = pars.cp.deventlist ;
+        pars.cp.deventlist = pt ;
+        pt->nextde = ptemp ;
+    }
+    else
+        addtoelist( pt, pars.cp.deventlist ) ;
+    pt ->popi = ej[1] - 1;
+    pt ->popj = ej[2] - 1;
+}
+
+void
+caseI(int *I, double migr){
+    int i, j, npop;
+    pars.cp.npop = I[0];
+    pars.cp.config = (int *) realloc( pars.cp.config, (unsigned)( pars.cp.npop*sizeof( int)));
+    npop = pars.cp.npop ;
+    
+    for( i=1; i<= pars.cp.npop; i++) {
+        pars.cp.config[i-1] = I[i];
+    }
+    pars.cp.mig_mat = (double **)realloc(pars.cp.mig_mat, (unsigned)(pars.cp.npop*sizeof(double *) )) ;
+    pars.cp.mig_mat[0] = (double *)realloc(pars.cp.mig_mat[0], (unsigned)( pars.cp.npop*sizeof(double)));
+    for(i=1; i<pars.cp.npop; i++) pars.cp.mig_mat[i] = (double *)malloc( (unsigned)( pars.cp.npop*sizeof(double)));
+    pars.cp.size = (double *)realloc( pars.cp.size, (unsigned)( pars.cp.npop*sizeof( double )));
+    pars.cp.alphag = (double *) realloc( pars.cp.alphag, (unsigned)( pars.cp.npop*sizeof( double )));
+    for( i=1; i< pars.cp.npop ; i++) {
+        (pars.cp.size)[i] = (pars.cp.size)[0]  ;
+        (pars.cp.alphag)[i] = (pars.cp.alphag)[0] ;
+    }
+    for( i=0; i<pars.cp.npop; i++)
+        for( j=0; j<pars.cp.npop; j++) pars.cp.mig_mat[i][j] = migr/(pars.cp.npop-1) ;
+    for( i=0; i< pars.cp.npop; i++) pars.cp.mig_mat[i][i] = migr ;
+}
+
+void casema(double *migmat_array){
+    int pop, pop2, tempArg, npop, npop2;
+    
+    tempArg = -1;
+    for( pop = 0; pop <npop; pop++)
+        for( pop2 = 0; pop2 <npop; pop2++){
+            pars.cp.mig_mat[pop][pop2]= migmat_array[tempArg++];}
+    for( pop = 0; pop < npop; pop++) {
+        pars.cp.mig_mat[pop][pop] = 0.0 ;
+        for( pop2 = 0; pop2 < npop; pop2++){
+            if( pop2 != pop ) pars.cp.mig_mat[pop][pop] += pars.cp.mig_mat[pop][pop2] ;
+        }
+    }
+}
+
 	
 	void
 usage()

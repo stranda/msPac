@@ -64,7 +64,8 @@ int links(int c);
 /*AES prototypes and defines moved from source code*/
 /*ms.c */
 #define SITESINC 10
+#include <Rcpp.h>
 
 int gensam( char **list, double *probss, double *ptmrca, double *pttot, int maxsites) ;
 void seedit( const char * ) ;
-void getpars( int argc, char *argv[], int *howmany)  ;
+void getnums(int *howmany, NumericVector nsam, NumericVector nreps, NumericVector t, int[] variable_list, int[] I, double[] migmat_array, NumericMatrix en, NumericMatrix ej)  ;
