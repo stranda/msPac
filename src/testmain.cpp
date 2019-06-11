@@ -127,7 +127,7 @@ struct params pars ;
 
 
 // [[Rcpp::export]]
-Rcpp::StringVector ms_main(Rcpp::NumericVector nsam, Rcpp::NumericVector nreps, Rcpp::NumericVector t, Rcpp::NumericVector variable_list_rcpp, Rcpp::IntegerVector I_rcpp, Rcpp::NumericVector migration, Rcpp::IntegerMatrix en, Rcpp::NumericMatrix ej)
+Rcpp::StringVector ms_main(NumericVector nsam, NumericVector nreps, NumericVector t, NumericVector variable_list_rcpp, IntegerVector I_rcpp, NumericVector migration, NumericMatrix en, NumericMatrix ej)
 {
 
     int i, k, howmany, segsites , afreq;
