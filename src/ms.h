@@ -64,8 +64,10 @@ int links(int c);
 /*AES prototypes and defines moved from source code*/
 /*ms.c */
 #define SITESINC 10
-#include <Rcpp.h>
 
 int gensam( char **list, double *probss, double *ptmrca, double *pttot, int maxsites) ;
 void seedit( const char * ) ;
-void getnums(int *howmany, NumericVector nsam, NumericVector nreps, NumericVector t, int[] variable_list, int[] I, double[] migmat_array, NumericMatrix en, NumericMatrix ej)  ;
+void caseen(double *en);
+void caseej(double *ej);
+void caseI(int *I, double migr);
+void casema(double *migmat_array);

@@ -138,24 +138,9 @@ StringVector main(NumericVector nsam, NumericVector nreps, NumericVector t, Nume
     ntbs = 0 ;
 
     count=0;
-    
-    int variable_list[variable_list_rcpp.length()];
-    for(i = 0; i < variable_list_rcpp.length(); i++){
-        variable_list[i] = variable_list_rcpp[i]
-    }
-    
-    int I[I_rcpp.size()];
-    for(m = 0; m < I_rcpp.length(); m++){
-        I[i] = I_rcpp[i];
-    }
-    
-    double migmat_array[migration.length()];
-    for(m = 0; m < migration.length(); m++){
-        migmat_array[m] = migration[m];
-    }
 
     
-    getnums( &howmany, nsam, nreps, t, variable_list, I, migmat_array, en, ej) ;   /* results are stored in global variable, pars */
+    getnums(nsam, nreps, t, variable_list_rcpp, I_rcpp, migration, en, NumericMatrix ej) ;   /* results are stored in global variable, pars */
 
     if( !pars.commandlineseedflag ) seedit( "s");
     pf = stdout ;
