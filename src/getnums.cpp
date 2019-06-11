@@ -4,18 +4,19 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include "getnums.h"
 
 extern "C" {
 #include "ms.h"
 }
 
+
 using namespace Rcpp;
 
 struct params pars ;
 
-void
-getnums(int *phowmany, NumericVector nsam, NumericVector nreps, NumericVector t,
-        NumericVector variable_list_rcpp, IntegerVector I_rcpp, NumericMatrix migration,
+void getnums(int *phowmany, NumericVector nsam, NumericVector nreps, NumericVector t,
+        NumericVector variable_list_rcpp, IntegerVector I_rcpp, NumericVector migration,
         NumericMatrix en, NumericMatrix ej){
     int i, j, m, n, r, sum , npop , npop2;
     double migr, mij, psize, palpha;

@@ -5,31 +5,27 @@
 
 using namespace Rcpp;
 
-// rcpp_hello_world
-List rcpp_hello_world();
-RcppExport SEXP _msPac_rcpp_hello_world() {
+// ms_main
+Rcpp::StringVector ms_main(Rcpp::NumericVector nsam, Rcpp::NumericVector nreps, Rcpp::NumericVector t, Rcpp::NumericVector variable_list_rcpp, Rcpp::IntegerVector I_rcpp, Rcpp::NumericMatrix migration, Rcpp::IntegerMatrix en, Rcpp::NumericMatrix ej);
+RcppExport SEXP _msPac_ms_main(SEXP nsamSEXP, SEXP nrepsSEXP, SEXP tSEXP, SEXP variable_list_rcppSEXP, SEXP I_rcppSEXP, SEXP migrationSEXP, SEXP enSEXP, SEXP ejSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcpp_hello_world());
-    return rcpp_result_gen;
-END_RCPP
-}
-// testmain
-NumericVector testmain(NumericVector u);
-RcppExport SEXP _msPac_testmain(SEXP uSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type u(uSEXP);
-    rcpp_result_gen = Rcpp::wrap(testmain(u));
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type nsam(nsamSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type nreps(nrepsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type t(tSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type variable_list_rcpp(variable_list_rcppSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type I_rcpp(I_rcppSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type migration(migrationSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type en(enSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type ej(ejSEXP);
+    rcpp_result_gen = Rcpp::wrap(ms_main(nsam, nreps, t, variable_list_rcpp, I_rcpp, migration, en, ej));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_msPac_rcpp_hello_world", (DL_FUNC) &_msPac_rcpp_hello_world, 0},
-    {"_msPac_testmain", (DL_FUNC) &_msPac_testmain, 1},
+    {"_msPac_ms_main", (DL_FUNC) &_msPac_ms_main, 8},
     {NULL, NULL, 0}
 };
 

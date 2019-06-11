@@ -102,6 +102,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include "getnums.h"
 
 extern "C" { 
     #include "ms.h"
@@ -126,7 +127,7 @@ struct params pars ;
 
 
 // [[Rcpp::export]]
-StringVector main(NumericVector nsam, NumericVector nreps, NumericVector t, NumericVector variable_list_rcpp, IntegerVector I_rcpp, NumericMatrix migration, IntegerMatrix en, NumericMatrix ej)
+Rcpp::StringVector ms_main(Rcpp::NumericVector nsam, Rcpp::NumericVector nreps, Rcpp::NumericVector t, Rcpp::NumericVector variable_list_rcpp, Rcpp::IntegerVector I_rcpp, Rcpp::NumericVector migration, Rcpp::IntegerMatrix en, Rcpp::NumericMatrix ej)
 {
 
     int i, k, howmany, segsites , afreq;
@@ -140,7 +141,7 @@ StringVector main(NumericVector nsam, NumericVector nreps, NumericVector t, Nume
     count=0;
 
     
-    getnums(nsam, nreps, t, variable_list_rcpp, I_rcpp, migration, en, ej) ;   /* results are stored in global variable, pars */
+    getnums(&howmany, nsam, nreps, t, variable_list_rcpp, I_rcpp, migration, en, ej) ;   /* results are stored in global variable, pars */
 
     if( !pars.commandlineseedflag ) seedit( "s");
     pf = stdout ;
