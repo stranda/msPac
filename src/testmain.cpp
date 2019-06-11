@@ -130,8 +130,8 @@ StringVector main(NumericVector nsam, NumericVector nreps, NumericVector t, Nume
 {
 
     int i, k, howmany, segsites , afreq;
-    char **list, **cmatrix(), **tbsparamstrs ;
-    FILE *pf, *fopen() ;
+    char **list, **cmatrix(int gsam, int len), **tbsparamstrs ;
+    FILE *pf; //*fopen() ;
     double probss, tmrca, ttot ;
     //deleted maxsites code here
 
@@ -140,7 +140,7 @@ StringVector main(NumericVector nsam, NumericVector nreps, NumericVector t, Nume
     count=0;
 
     
-    getnums(nsam, nreps, t, variable_list_rcpp, I_rcpp, migration, en, NumericMatrix ej) ;   /* results are stored in global variable, pars */
+    getnums(nsam, nreps, t, variable_list_rcpp, I_rcpp, migration, en, ej) ;   /* results are stored in global variable, pars */
 
     if( !pars.commandlineseedflag ) seedit( "s");
     pf = stdout ;
