@@ -103,9 +103,6 @@
 #include <string.h>
 #include "ms.h"
 
-
-
-
 #define NL putchar('\n')
 #define size_t unsigned
 
@@ -135,7 +132,7 @@ struct params pars ;
 
 
 	int 
-gensam( char **list, double *pprobss, double *ptmrca, double *pttot, int maxsites )
+gensam( char **list, double *pprobss, double *ptmrca, double *pttot, int maxsites, struct params pars)
 {
 	int nsegs, h, i, k, j, seg, ns, start, end, len, segsit ;
 	struct segl *seglst, *segtre_mig(struct c_params *p, int *nsegs ) ; /* used to be: [MAXSEG];  */

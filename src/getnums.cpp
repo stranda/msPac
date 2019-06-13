@@ -10,14 +10,11 @@ extern "C" {
 #include "ms.h"
 }
 
-
 using namespace Rcpp;
 
-struct params pars ;
-
-void getnums(int *phowmany, NumericVector nsam, NumericVector nreps, NumericVector t,
+struct params getnums(int *phowmany, NumericVector nsam, NumericVector nreps, NumericVector t,
         NumericVector variable_list_rcpp, IntegerVector I_rcpp, NumericVector migration,
-        NumericMatrix en, NumericMatrix ej){
+        NumericMatrix en, NumericMatrix ej, struct params pars){
     int i, j, m, n, r, sum , npop , npop2;
     double migr, mij, psize, palpha;
     FILE *pf;
@@ -75,7 +72,7 @@ void getnums(int *phowmany, NumericVector nsam, NumericVector nreps, NumericVect
     for(m = 0; m < I_rcpp.length(); m++){
         I[i] = I_rcpp[i];
     }
-    caseI(I, migr);
+    pars = caseI(I, migr, pars);
     
     /* Case ma - did not code other m cases without the a */
 
@@ -85,7 +82,7 @@ void getnums(int *phowmany, NumericVector nsam, NumericVector nreps, NumericVect
         migmat_array[m] = migration[m];
     }
     
-    casema(migmat_array);
+    pars = casema(migmat_array, pars);
     
     double row[3];
     for(i = 0; i <= en.nrow(); i++){
@@ -93,7 +90,7 @@ void getnums(int *phowmany, NumericVector nsam, NumericVector nreps, NumericVect
         for(r = 0; r < 3; r++){ //hard coded as three because the en and ej should only have 3 numbers
             row[r] = rcpp_row_en[r];
         }
-        caseen(row);
+        pars = caseen(row, pars);
     }
     
     for(i = 0; i <= ej.nrow(); i++){
@@ -101,12 +98,12 @@ void getnums(int *phowmany, NumericVector nsam, NumericVector nreps, NumericVect
         for(r = 0; r < 3; r++){
             row[r] = rcpp_row_ej[r];
         }
-        caseej(row);
+        pars = caseej(row, pars);
     }
+    return pars;
 }
 
-void
-caseen(double *en){
+struct params caseen(double *en, struct params pars){
     void addtoelist( struct devent *pt, struct devent *elist );
     struct devent *ptemp , *pt ;
     
@@ -122,14 +119,15 @@ caseen(double *en){
         pars.cp.deventlist = pt ;
         pt->nextde = ptemp ;
     }
-    else
+    else {
         addtoelist( pt, pars.cp.deventlist ) ;
-    pt->popi =  en[1] -1 ; /* keep this as - 1? */
-    pt->paramv = en[2] ;
+        pt->popi =  en[1] -1 ; /* keep this as - 1? */
+        pt->paramv = en[2] ; }
+    
+    return pars;
 }
 
-void
-caseej(double *ej){
+struct params caseej(double *ej, struct params pars){
     void addtoelist( struct devent *pt, struct devent *elist );
     struct devent *ptemp , *pt ;
     
@@ -145,14 +143,15 @@ caseej(double *ej){
         pars.cp.deventlist = pt ;
         pt->nextde = ptemp ;
     }
-    else
+    else{
         addtoelist( pt, pars.cp.deventlist ) ;
-    pt ->popi = ej[1] - 1;
-    pt ->popj = ej[2] - 1;
+        pt ->popi = ej[1] - 1;
+        pt ->popj = ej[2] - 1; }
+    
+    return pars;
 }
 
-void
-caseI(int *I, double migr){
+struct params caseI(int *I, double migr, struct params pars){
     int i, j, npop;
     pars.cp.npop = I[0];
     pars.cp.config = (int *) realloc( pars.cp.config, (unsigned)( pars.cp.npop*sizeof( int)));
@@ -173,9 +172,11 @@ caseI(int *I, double migr){
     for( i=0; i<pars.cp.npop; i++)
         for( j=0; j<pars.cp.npop; j++) pars.cp.mig_mat[i][j] = migr/(pars.cp.npop-1) ;
     for( i=0; i< pars.cp.npop; i++) pars.cp.mig_mat[i][i] = migr ;
+    
+    return pars;
 }
 
-void casema(double *migmat_array){
+struct params casema(double *migmat_array, struct params pars){
     int pop, pop2, tempArg, npop, npop2;
     
     tempArg = -1;
@@ -188,5 +189,6 @@ void casema(double *migmat_array){
             if( pop2 != pop ) pars.cp.mig_mat[pop][pop] += pars.cp.mig_mat[pop][pop2] ;
         }
     }
+    return pars;
 }
 

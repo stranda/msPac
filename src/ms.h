@@ -65,9 +65,7 @@ int links(int c);
 /*ms.c */
 #define SITESINC 10
 
-int gensam( char **list, double *probss, double *ptmrca, double *pttot, int maxsites) ;
+int gensam( char **list, double *probss, double *ptmrca, double *pttot, int maxsites, struct params pars) ;
 void seedit( const char * ) ;
-void caseen(double *en);
-void caseej(double *ej);
-void caseI(int *I, double migr);
-void casema(double *migmat_array);
+void addtoelist( struct devent *pt, struct devent *elist );
+char ** cmatrix(int nsam, int len);

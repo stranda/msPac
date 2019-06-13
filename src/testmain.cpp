@@ -1,4 +1,4 @@
-/***** ms.c     ************************************************
+m/***** ms.c     ************************************************
 *
 *       Generates samples of gametes ( theta given or fixed number 
 *						of segregating sites.)
@@ -123,7 +123,6 @@ double *agevec ;
 double alleleage ;
 double segfac ;
 int count, ntbs, nseeds ;
-struct params pars ;
 
 
 // [[Rcpp::export]]
@@ -134,6 +133,7 @@ Rcpp::StringVector ms_main(NumericVector nsam, NumericVector nreps, NumericVecto
     char **list, **cmatrix(int gsam, int len), **tbsparamstrs ;
     FILE *pf; //*fopen() ;
     double probss, tmrca, ttot ;
+    struct params pars;
     //deleted maxsites code here
 
     ntbs = 0 ;
@@ -141,7 +141,7 @@ Rcpp::StringVector ms_main(NumericVector nsam, NumericVector nreps, NumericVecto
     count=0;
 
     
-    getnums(&howmany, nsam, nreps, t, variable_list_rcpp, I_rcpp, migration, en, ej) ;   /* results are stored in global variable, pars */
+    pars = getnums(&howmany, nsam, nreps, t, variable_list_rcpp, I_rcpp, migration, en, ej, pars) ;   /* results are stored in global variable, pars */
 
     if( !pars.commandlineseedflag ) seedit( "s");
     pf = stdout ;
@@ -164,7 +164,7 @@ Rcpp::StringVector ms_main(NumericVector nsam, NumericVector nreps, NumericVecto
     while( howmany-count++ ) {
         
         fprintf(pf,"\n//");
-        segsites = gensam( list, &probss, &tmrca, &ttot, maxsites) ;
+        segsites = gensam( list, &probss, &tmrca, &ttot, maxsites, pars) ;
         if( pars.mp.timeflag ) fprintf(pf,"time:\t%lf\t%lf\n",tmrca, ttot ) ;
             if( (segsites > 0 ) || ( pars.mp.theta > 0.0 ) ) {
                 if( (pars.mp.segsitesin > 0 ) && ( pars.mp.theta > 0.0 ))
