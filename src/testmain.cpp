@@ -1,4 +1,4 @@
-m/***** ms.c     ************************************************
+/***** ms.c     ************************************************
 *
 *       Generates samples of gametes ( theta given or fixed number 
 *						of segregating sites.)
